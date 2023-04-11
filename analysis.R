@@ -9,6 +9,8 @@ library(correlation)
 library(corrplot)
 library(scales)
 library(performance)
+library(yhat)
+library(leaps)
 ##LOAD DATASET##
 load("2021_Canadian_Election_Study_v1.0.RData")
 data <- table
@@ -38,12 +40,7 @@ fit <- cfa(pop, sampling.weights = "pes21_weight_general_all", missing = "ML", d
 fita <- cfa(pop, missing = "ML", data = data_wt)
 summary(fit, fit.measures = TRUE, standardized = TRUE)
 
-#create data frame for populism scale 6 items
-populism_sccale <- data.frame(data[,917:922])
-#create data frame for populism scale 5 items
-populism_sccale2 <- data.frame(data[,c(917:919, 921:922)])
-#reliability analysis for populism measure
-alpha(populism_sccale2)
+
 #create factor in data set
 data <- cbind(data, lavPredict(fit, type = "lv", append.data = TRUE))
 data_wt <- cbind(data_wt, lavPredict(fita, type = "lv", append.data = TRUE)) #weighted factor
@@ -177,7 +174,7 @@ pysc <- subset(data_wt, select = c("popu", "pes21_big5_1",
 
 correlation(pysc)
 
-#remove insignificant personality traits
+#remove non-significant personality traits
 pysc2 <- subset(data, select = c("popu", "pes21_big5_3", "pes21_big5_9", "pes21_feminine_1", "pes21_masculine_1"))
 correlation(pysc2)
 corrplot(cor(pysc2, use = "pairwise.complete.obs"), method = "number", type = "upper")
@@ -199,11 +196,21 @@ summary(Mod2)
 performance(Mod2)
 
 ##CANADA SPECIFIC CORRELATES##
-cansp <- subset(data_wt, select = c("popu", "indi", "qebc", "cps21_groups_therm_7", 
+cansp <- subset(data_wt, select = c("popu", "indi", "cps21_groups_therm_7", 
                                  "lib", "con", "ndp", "gpc", "pq", "ppc" ))
 correlation(cansp)
 corrplot(cor(cansp, use = "pairwise.complete.obs"), method = "number", type = "upper")
 
 ##REGRESSION MODEL FOR CANADA SPECIFIC CORRELATES##
-Mod3 <- lm(popu ~ west + indi + qebc + canbe + cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
+Mod3 <- lm(popu ~ west + indi + canbe + cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
+             trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod3)
+
+Mod4 <- lm(popu ~ lib + con + ndp + pq + ppc + feelpol + dispol + govinef + govef + econ + demsat + cog + soc_trust + 
+             trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
+summary(Mod4)
+
+Reg1 <- regr(Mod4)
+RegOut_1$Beta_Weights
+RegOut_1$Structure_Coefficients
+RegOut_1$Commonality_Data
