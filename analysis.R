@@ -226,9 +226,12 @@ performance(Mod1)
 
 #POLITICAL CORRELATES#
 #correlation matrix
-poli <- subset(data_wt, select = c("feelpol", "econ", "popu"))
+poli <- subset(data_wt, select = c("popu", "feelpol", "econ", "trus"))
 correlation(poli)
-corrplot(cor(poli, use = "pairwise.complete.obs"), method = "number", type = "upper")
+pol <- cor(poli, use = "pairwise.complete.obs")
+colnames(pol) <- c("Populist Attitudes", "Trust-Politicians", "Neoliberal Attitudes", "Institutional Trust" )
+rownames(pol) <- c("Populist Attitudes", "Trust-Politicians", "Neoliberal Attitudes", "Institutional Trust" )
+corrplot(pol, method = "number", type = "upper", bg = "grey")
 
 ###REGRESSION MODEL FOR POLITICAL CORRELATES##
 Mod2 <- lm(popu ~ feelpol + dispol + govinef + govef + econ + demsat +trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all )
@@ -239,16 +242,19 @@ performance(Mod2)
 cansp <- subset(data_wt, select = c("popu", "indi", "cps21_groups_therm_7", 
                                  "lib", "con", "ndp", "gpc", "pq", "ppc" ))
 correlation(cansp)
-corrplot(cor(cansp, use = "pairwise.complete.obs"), method = "number", type = "upper")
+C <- cor(cansp, use = "pairwise.complete.obs")
+colnames(C) <- c("Populist Attitudes", "Indigenous Resentment", "Feelings Towards Americans", "Support-LPC", "Support-CPC", "Support-NDP", "Support-GPC", "Support-PQ", "Support-PPC")
+rownames(C) <- c("Populist Attitudes", "Indigenous Resentment", "Feelings Towards Americans", "Support-LPC", "Support-CPC", "Support-NDP", "Support-GPC", "Support-PQ", "Support-PPC")
+corrplot(C, method = "number", type = "upper", bg = "grey")
 
 ##REGRESSION MODEL FOR CANADA SPECIFIC CORRELATES##
 Mod3 <- lm(popu ~ west + indi + canbe + qebc + cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
              trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod3)
 
-Mod4 <- lm(popu ~ pes21_big5_3 + pes21_big5_9 + pes21_feminine_1 + pes21_masculine_1 + cog + soc_trust + 
+Mod4 <- lm(popu ~ extra + agree + consc + emoti + ote + pes21_feminine_1 + pes21_masculine_1 + cog + soc_trust + 
              feelpol + dispol + govinef + govef + econ + demsat +
-             west + indi + canbe + cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
+             west + indi + canbe + qebc+ cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
              trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod4)
 
@@ -264,11 +270,12 @@ results1 <- bind_cols(results1, fit_95_1) %>%
   filter(!Variable %in% c("(Intercept)","trus", "wom", "uni", "unem", "cps21_age", "cps21_lr_scale_bef_1"))
 results1 <- results1 %>% select(-SE, -statistic, - p.value)
 
-ggplot(results1, aes(x = Variable, y = Coefficient)) +
+model1 <- ggplot(results1, aes(x = Variable, y = Coefficient)) +
   geom_hline(yintercept = 0, color = gray(1/2), lty =2)+ geom_point(aes(x = Variable, y = Coefficient)) + 
   geom_linerange(aes(x = Variable, ymin = conf.low_95, ymax = conf.high_95)) + ggtitle("Populist Attitudes - Personality") +
  scale_x_discrete(labels = c("Agreeableness", "Conscientiousness", "Emotional Stability", "Extraversion", "Openness to Experiences" )) +
 coord_flip() + theme_bw()
+ggsave("mode1.png", plot = model1)
 
 #Plot for Mod1
 results2 <- tidy(Mod1)
@@ -282,12 +289,14 @@ results2 <- bind_cols(results2, fit_95_2) %>%
   filter(!Variable %in% c("(Intercept)", "trus", "wom", "uni", "unem", "cps21_age", "cps21_lr_scale_bef_1"))
 results2 <- results2 %>% select(-SE, -statistic, - p.value)
 
-ggplot(results2, aes(x = Variable, y = Coefficient)) +
+model2 <- ggplot(results2, aes(x = Variable, y = Coefficient)) +
   geom_hline(yintercept = 0, color = gray(1/2), lty =2)+ geom_point(aes(x = Variable, y = Coefficient)) + 
   geom_linerange(aes(x = Variable, ymin = conf.low_95, ymax = conf.high_95)) + ggtitle("Populist Attitudes - Pyschological Correlates") +
   scale_x_discrete(labels = c("Agreeability", "Need for Cognition", "Conscientiousness", "Emotional Stability", "Extraversion",
                               "Openness to Experiences", "Femininity", "Masculinity", "Social Trust" ))+
   coord_flip() + theme_bw() 
+
+ggsave("mode2.png", plot = model2)
 
 results3 <- tidy(Mod2)
 fit_95_3 <- confint(Mod2, level = 0.95) %>%
@@ -300,12 +309,13 @@ results3 <- bind_cols(results3, fit_95_3) %>%
   filter(!Variable %in% c("(Intercept)","trus","wom", "uni", "unem", "cps21_age", "cps21_lr_scale_bef_1"))
 results3 <- results3 %>% select(-SE, -statistic, - p.value)
 
-ggplot(results3, aes(x = Variable, y = Coefficient)) +
+model3 <- ggplot(results3, aes(x = Variable, y = Coefficient)) +
   geom_hline(yintercept = 0, color = gray(1/2), lty =2)+ geom_point(aes(x = Variable, y = Coefficient)) + 
   geom_linerange(aes(x = Variable, ymin = conf.low_95, ymax = conf.high_95)) + ggtitle("Populist Attitudes - Political Correlates") + 
   scale_x_discrete(labels = c("Satisfaction with Democracy", "Discussion of Politics", "Neoliberal Support", "Feelings towards politicians", "Government Cares", "Government Inefficiency")) + 
   coord_flip() + theme_bw() 
 
+ggsave("mode3.png", plot = model3)
 results4 <- tidy(Mod3)
 fit_95_4 <- confint(Mod3, level = 0.95) %>%
   data.frame() %>%
@@ -317,13 +327,14 @@ results4 <- bind_cols(results4, fit_95_4) %>%
   filter(!Variable %in% c("(Intercept)","trus","wom", "uni", "unem", "cps21_age", "cps21_lr_scale_bef_1"))
 results4 <- results4 %>% select(-SE, -statistic, - p.value)
 
-ggplot(results4, aes(x = Variable, y = Coefficient)) +
+model4 <- ggplot(results4, aes(x = Variable, y = Coefficient)) +
   geom_hline(yintercept = 0, color = gray(1/2), lty =2)+ geom_point(aes(x = Variable, y = Coefficient)) + 
   geom_linerange(aes(x = Variable, ymin = conf.low_95, ymax = conf.high_95)) + ggtitle("Populist Attitudes - Canada Specific Correlates") + 
   scale_x_discrete(labels = c("National Pride", "Support CPC", "Views of Americans", "Support GPC", "Indigenous Resentment", "Support LPC", "Support NDP", 
                               "Support PPC", "Support PQ", "Quebec Resentment", "Western Canadian"))+
   coord_flip() + theme_bw() 
 
+ggsave("mode4.png", plot = model4)
 
 results5 <- tidy(Mod2)
 fit_95_5 <- confint(Mod2, level = 0.95) %>%
@@ -336,9 +347,9 @@ results5 <- bind_cols(results5, fit_95_5) %>%
   filter(!Variable %in% c("(Intercept)", "govinef", "govef", "feelpol", "econ", "dispol", "demsat"))
 results5 <- results5 %>% select(-SE, -statistic, - p.value)
 
-ggplot(results5, aes(x = Variable, y = Coefficient)) +
+model5 <- ggplot(results5, aes(x = Variable, y = Coefficient)) +
   geom_hline(yintercept = 0, color = gray(1/2), lty =2)+ geom_point(aes(x = Variable, y = Coefficient)) + 
   geom_linerange(aes(x = Variable, ymin = conf.low_95, ymax = conf.high_95)) + ggtitle("Populist Attitudes - Political Predictors Control Variables") + 
   scale_x_discrete(labels = c("Age", "Ideology", "Institutional Trust", "Unemployed", "Post-Secondary Education", "Woman"))+
   coord_flip() + theme_bw() 
-
+ggsave("mode5.png", plot = model5)
