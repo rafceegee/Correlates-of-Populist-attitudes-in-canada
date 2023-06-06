@@ -12,9 +12,10 @@ library(performance)
 library(yhat)
 library(ggplot2)
 library(broom)
+library(jtools)
 ##LOAD DATASET##
 load("2021_Canadian_Election_Study_v1.0.RData")
-data <- table
+data <- as.data.frame(table)
 data$pes21_weight_general_all[is.na(data$pes21_weight_general_all)] <- 0 #assign 0  to un-weighted cases 
 #create weighted data set for correlations and descriptive 
 dat_wt <- as_survey(data, weights = pes21_weight_general_all) 
@@ -40,7 +41,8 @@ pop <- 'popu =~  pes21_populism_2R + pes21_populism_3R + pes21_populism_4R  + pe
 fit <- cfa(pop, sampling.weights = "pes21_weight_general_all", missing = "ML", data = data)
 fita <- cfa(pop, missing = "ML", data = data_wt)
 summary(fit, fit.measures = TRUE, standardized = TRUE)
-
+#summ(fit)
+inspect(fit,what="std")$lambda
 
 #create factor in data set
 data <- cbind(data, lavPredict(fit, type = "lv", append.data = TRUE))
@@ -221,7 +223,9 @@ Mod0 <- lm(popu ~ extra + agree + consc + emoti + ote +
 Mod1 <- lm(popu ~ extra + agree + consc + emoti + ote + pes21_feminine_1 + pes21_masculine_1 + cog + soc_trust + 
              trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod0)
+summ(Mod0)
 summary(Mod1)
+summ(Mod1)
 performance(Mod1)
 
 #POLITICAL CORRELATES#
@@ -236,6 +240,7 @@ corrplot(pol, method = "number", type = "upper", bg = "grey")
 ###REGRESSION MODEL FOR POLITICAL CORRELATES##
 Mod2 <- lm(popu ~ feelpol + dispol + govinef + govef + econ + demsat +trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all )
 summary(Mod2)
+summ(Mod2)
 performance(Mod2)
 
 ##CANADA SPECIFIC CORRELATES##
@@ -251,12 +256,17 @@ corrplot(C, method = "number", type = "upper", bg = "grey")
 Mod3 <- lm(popu ~ west + indi + canbe + qebc + cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
              trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod3)
+summ(Mod3)
 
 Mod4 <- lm(popu ~ extra + agree + consc + emoti + ote + pes21_feminine_1 + pes21_masculine_1 + cog + soc_trust + 
              feelpol + dispol + govinef + govef + econ + demsat +
              west + indi + canbe + qebc+ cps21_groups_therm_7 + lib + con + ndp + gpc + pq + ppc +
              trus + wom + uni + unem + cps21_age + cps21_lr_scale_bef_1, data = data, na.action = na.omit, weights = pes21_weight_general_all)
 summary(Mod4)
+summ(Mod4)
+
+#Examining suppression effects
+step(Mod4, direction = "backward")
 
 #Plot for Mod0
 results1 <- tidy(Mod0)
